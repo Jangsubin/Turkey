@@ -85,9 +85,9 @@ void main(){
         int SendSize = MAX_SIZE;
 		char x[MAX_SIZE]; //client로 부터 전송 받은 첫번째 변수
 		char Buffer_1[999]; //client로 부터 첫번째로 전송받은 값. x값이 들어있습니다.
-		recv(Client_Socket, Buffer_1, sizeof Buffer_1, 0); //x값을 전송받습니다.
+		recv(Client_Socket,x,SendSize, 0); //x값을 전송받습니다.
 		printf("입력받은 x값: %s \n", x); //x값을 출력
-        send( Client_Socket,x, SendSize, 0 ); //결과값의 char형을 전송합니다.	     
+        	send( Client_Socket,x, SendSize, 0 ); //결과값의 char형을 전송합니다.	     
       
 	}
 	// Wait : Server state is listen.
