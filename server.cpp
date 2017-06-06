@@ -1,30 +1,22 @@
-//--------------------------------------------------------------------------------
-//  Code		: Depending on the incoming message, the server automatically send
-//				  a response to the program
-//  Subject		: Computer Network
-//  Professor	: Sang Bang Choi
-//  File		: Server.cpp
-//--------------------------------------------------------------------------------
-
 #include <stdio.h>			// Set to use printf() Function
 #include <stdlib.h>			// Set to use exit() Function
 #include <winsock2.h>		// Set to use a Socket (Using winsock.h or winsoch2.h)
 #pragma comment (lib, "ws2_32.lib")
 
-#define MAX_SIZE 64         // ÇÑ¹ø¿¡ º¸³¾ µ¥ÀÌÅÍ Å©±â¸¦ ÃÖ´ë 64(Bytes)·Î ÁöÁ¤ 
+#define MAX_SIZE 64         // í•œë²ˆì— ë³´ë‚¼ ë°ì´í„° í¬ê¸°ë¥¼ ìµœëŒ€ 64(Bytes)ë¡œ ì§€ì • 
 
 void main(){   
 
-	//Winsock_data ¼±¾ğ(WSADATA type structure)
+	//Winsock_data ì„ ì–¸(WSADATA type structure)
 	WSADATA winsock_data; 
-	//socket ¼±¾ğ
+	//socket ì„ ì–¸
 	SOCKET Server_Socket; 
 	// declare structure of socket address information.
 	SOCKADDR_IN Server_Address; 
-	// Á¢¼ÓÇÒ Æ÷Æ® ³Ñ¹ö ÁöÁ¤. 2000 ~ 65535±îÁö ÀÓÀÇÀûÀ¸·Î ¼³Á¤
+	// ì ‘ì†í•  í¬íŠ¸ ë„˜ë²„ ì§€ì •. 2000 ~ 65535ê¹Œì§€ ì„ì˜ì ìœ¼ë¡œ ì„¤ì •
 	unsigned short Server_Port = 6801;
 
-	//Windows socket start ½ÃÀÛÀü, socket DLL files ÃÊ±âÈ­
+	//Windows socket start ì‹œì‘ì „, socket DLL files ì´ˆê¸°í™”
 	if(WSAStartup(0x202,&winsock_data) == SOCKET_ERROR){ 
 		printf("WSAStartup Setting Error.\n");
 		// Close initialization failure.
@@ -32,7 +24,7 @@ void main(){
 		exit(0); 
 	}
 	
-	// TCP¸¦ »ç¿ëÇÏ¹Ç·Î AF_INET »ç¿ë
+	// TCPë¥¼ ì‚¬ìš©í•˜ë¯€ë¡œ AF_INET ì‚¬ìš©
 	Server_Address.sin_family = AF_INET;
 
 	// IP address and connect port number
@@ -40,10 +32,10 @@ void main(){
 	Server_Address.sin_addr.s_addr = inet_addr("127.0.0.1");	// IP address
 	Server_Address.sin_port = htons(Server_Port);				// Port Number
 
-	// socket »ı¼º
+	// socket ìƒì„±
 	Server_Socket = socket(AF_INET, SOCK_STREAM,0);
 
-	// socket »ı¼º error½Ã
+	// socket ìƒì„± errorì‹œ
 	if(Server_Socket == INVALID_SOCKET){
 		printf("Cannot create socket."); 
 		closesocket( Server_Socket ); 
@@ -71,7 +63,7 @@ void main(){
 			exit(0); 
 		}
 
-		// Client Socket ¼±¾ğ
+		// Client Socket ì„ ì–¸
 		SOCKET Client_Socket;
 		// Socket Address Structure declaration
 		SOCKADDR_IN Client_Address;
@@ -91,11 +83,11 @@ void main(){
 			printf(" => Connect IP: %s, Port : %d  Connect complete!\n\n", inet_ntoa(Client_Address.sin_addr), htons(Client_Address.sin_port)); 
 		}
         int SendSize = MAX_SIZE;
-		char x[MAX_SIZE]; //client·Î ºÎÅÍ Àü¼Û ¹ŞÀº Ã¹¹øÂ° º¯¼ö
-		char Buffer_1[999]; //client·Î ºÎÅÍ Ã¹¹øÂ°·Î Àü¼Û¹ŞÀº °ª. x°ªÀÌ µé¾îÀÖ½À´Ï´Ù.
-		recv(Client_Socket, Buffer_1, sizeof Buffer_1, 0); //x°ªÀ» Àü¼Û¹Ş½À´Ï´Ù.
-		printf("ÀÔ·Â¹ŞÀº x°ª: %s \n", x); //x°ªÀ» Ãâ·Â
-        send( Client_Socket,x, SendSize, 0 ); //°á°ú°ªÀÇ charÇüÀ» Àü¼ÛÇÕ´Ï´Ù.	     
+		char x[MAX_SIZE]; //clientë¡œ ë¶€í„° ì „ì†¡ ë°›ì€ ì²«ë²ˆì§¸ ë³€ìˆ˜
+		char Buffer_1[999]; //clientë¡œ ë¶€í„° ì²«ë²ˆì§¸ë¡œ ì „ì†¡ë°›ì€ ê°’. xê°’ì´ ë“¤ì–´ìˆìŠµë‹ˆë‹¤.
+		recv(Client_Socket,x,SendSize, 0); //xê°’ì„ ì „ì†¡ë°›ìŠµë‹ˆë‹¤.
+		printf("ì…ë ¥ë°›ì€ xê°’: %s \n", x); //xê°’ì„ ì¶œë ¥
+        	send( Client_Socket,x, SendSize, 0 ); //ê²°ê³¼ê°’ì˜ charí˜•ì„ ì „ì†¡í•©ë‹ˆë‹¤.	     
       
 	}
 	// Wait : Server state is listen.
