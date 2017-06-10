@@ -1,92 +1,92 @@
-#include <stdio.h>	// Ç¥ÁØ ÀÔÃâ·Â 
-#include <stdlib.h>	// Ç¥ÁØ ¶óÀÌºê·¯¸® 
-#include <unistd.h>	// À¯´Ğ½º Ç¥ÁØ 
-#include <string.h>	// ¹®ÀÚ¿­ Ã³¸® 
-#include <arpa/inet.h>	// ÀÎÅÍ³İ ÇÁ·ÎÅäÄİ 
-#include <sys/socket.h>	// ¼ÒÄÏÇÔ¼ö 
-#include <netinet/in.h>	// ÀÎÅÍ³İ ÁÖ¼Ò Ã¼°è (ex. in_port_t) 
+#include <stdio.h>	// í‘œì¤€ ì…ì¶œë ¥ 
+#include <stdlib.h>	// í‘œì¤€ ë¼ì´ë¸ŒëŸ¬ë¦¬ 
+#include <unistd.h>	// ìœ ë‹‰ìŠ¤ í‘œì¤€ 
+#include <string.h>	// ë¬¸ìì—´ ì²˜ë¦¬ 
+#include <arpa/inet.h>	// ì¸í„°ë„· í”„ë¡œí† ì½œ 
+#include <sys/socket.h>	// ì†Œì¼“í•¨ìˆ˜ 
+#include <netinet/in.h>	// ì¸í„°ë„· ì£¼ì†Œ ì²´ê³„ (ex. in_port_t) 
 #include <pthread.h> 
 
  
-#define BUF_SIZE 256	// jÆÃÇÒ ?? ¸ŞtlÁö ÃÖ´ë ±æÀÌ 
-#define MAX_CLNT 256	// ÃÖ´ë µ¿½Ã Á¢¼ÓÀÚ ¼ö 
+#define BUF_SIZE 256	// jíŒ…í•  ?? ë©”tlì§€ ìµœëŒ€ ê¸¸ì´ 
+#define MAX_CLNT 256	// ìµœëŒ€ ë™ì‹œ ì ‘ì†ì ìˆ˜ 
+#define NAME_SIZE 20
  
- 
-void * handle_clnt(void * arg);	// Å¬¶óÀÌ¾ğÆ® ¾²·¹µå¿ë ÇÔ¼ö(ÇÔ¼ö Æ÷ÀÎÅÍ) 
-void send_msg(char * msg, int len);// ¸Ş½ÃÁö Àü´Ş ÇÔ¼ö 
-void error_handling(char * msg);	// ¿¹¿Ü Ã³¸® ÇÔ¼ö 
-16 
+void * handle_clnt(void * arg);	// í´ë¼ì´ì–¸íŠ¸ ì“°ë ˆë“œìš© í•¨ìˆ˜(í•¨ìˆ˜ í¬ì¸í„°) 
+void send_msg(char * msg, int len);// ë©”ì‹œì§€ ì „ë‹¬ í•¨ìˆ˜ 
+void error_handling(char * msg);	// ì˜ˆì™¸ ì²˜ë¦¬ í•¨ìˆ˜ 
+
  
 int clnt_cnt=0;	
 int clnt_socks[MAX_CLNT]; 
 
-char clnt_name[NAME_SIZE]= {NULL}; // Á¢¼ÓÀÚ ÀÌ¸§
+char clnt_name[NAME_SIZE]= {NULL}; // ì ‘ì†ì ì´ë¦„
 char clnt_names[MAX_CLNT][NAME_SIZE]= {NULL};
 
 
-pthread_mutex_t mutx; //»óÈ£ ¹èÁ¦¸¦ À§ÇÑ
+pthread_mutex_t mutx; //ìƒí˜¸ ë°°ì œë¥¼ ìœ„í•œ
 
-int main(int argc, char *argv[])		//ÀÎÀÚ·Î Æ÷Æ®¹øÈ£ ¹ŞÀ½
+int main(int argc, char *argv[])		//ì¸ìë¡œ í¬íŠ¸ë²ˆí˜¸ ë°›ìŒ
 {
-	int serv_sock, clnt_sock, i;		// ¼ÒÄÏ Åë½Å¿ë ¼­¹ö ¼ÒÄÏ°ú ÀÓ½Ã Å¬¶óÀÌ¾ğÆ® ¼ÒÄÏ 
-	struct sockaddr_in serv_adr, clnt_adr;	// ¼­¹ö ÁÖ¼Ò, Å¬¶óÀÌ¾ğÆ® ÁÖ¼Ò ±¸Á¶Ã¼ 
-	int clnt_adr_sz;			// Å¬¶óÀÌ¾ğÆ® ÁÖ¼Ò ±¸Á¶Ã¼ 
-	pthread_t t_id;				// Å¬¶óÀÌ¾ğÆ® ¾²·¹µå¿ë ID 
+	int serv_sock, clnt_sock, i;		// ì†Œì¼“ í†µì‹ ìš© ì„œë²„ ì†Œì¼“ê³¼ ì„ì‹œ í´ë¼ì´ì–¸íŠ¸ ì†Œì¼“ 
+	struct sockaddr_in serv_adr, clnt_adr;	// ì„œë²„ ì£¼ì†Œ, í´ë¼ì´ì–¸íŠ¸ ì£¼ì†Œ êµ¬ì¡°ì²´ 
+	int clnt_adr_sz;			// í´ë¼ì´ì–¸íŠ¸ ì£¼ì†Œ êµ¬ì¡°ì²´ 
+	pthread_t t_id;				// í´ë¼ì´ì–¸íŠ¸ ì“°ë ˆë“œìš© ID 
 	if(argc!=2) {
-		printf("Usage : %s <port>\n", argv[0]);	// »ç¿ë¹ıÀ» ¾Ë·ÁÁØ´Ù.
-		exit(1);			// ÇÁ·Î±×·¥ ºñÁ¤»ó Á¾·á 
+		printf("Usage : %s <port>\n", argv[0]);	// ì‚¬ìš©ë²•ì„ ì•Œë ¤ì¤€ë‹¤.
+		exit(1);			// í”„ë¡œê·¸ë¨ ë¹„ì •ìƒ ì¢…ë£Œ 
 	}
   
-	pthread_mutex_init(&mutx, NULL);	// Ä¿³Î¿¡¼­ Mutex ¾²±âÀ§ÇØ ¾ò¾î ¿Â´Ù. 
- 	serv_sock=socket(PF_INET, SOCK_STREAM, 0);	// TCP¿ë ¼ÒÄÏ »ı¼º 
+	pthread_mutex_init(&mutx, NULL);	// ì»¤ë„ì—ì„œ Mutex ì“°ê¸°ìœ„í•´ ì–»ì–´ ì˜¨ë‹¤. 
+ 	serv_sock=socket(PF_INET, SOCK_STREAM, 0);	// TCPìš© ì†Œì¼“ ìƒì„± 
  
  
- 	memset(&serv_adr, 0, sizeof(serv_adr));	// ¼­¹ö ÁÖ¼Ò ±¸Á¶Ã¼ ÃÊ±âÈ­ 
- 	serv_adr.sin_family=AF_INET; 		// ÀÎÅÍ³İ Åë½Å 
- 	serv_adr.sin_addr.s_addr=htonl(INADDR_ANY);	// ÇöÀç IP¸¦ ÀÌ¿ëÇÏ°í 
- 	serv_adr.sin_port=htons(atoi(argv[1])); // Æ÷Æ®´Â »ç¿ëÀÚ°¡ ÁöÁ¤ÇÑ Æ÷Æ® »ç¿ë 
+ 	memset(&serv_adr, 0, sizeof(serv_adr));	// ì„œë²„ ì£¼ì†Œ êµ¬ì¡°ì²´ ì´ˆê¸°í™” 
+ 	serv_adr.sin_family=AF_INET; 		// ì¸í„°ë„· í†µì‹  
+ 	serv_adr.sin_addr.s_addr=htonl(INADDR_ANY);	// í˜„ì¬ IPë¥¼ ì´ìš©í•˜ê³  
+ 	serv_adr.sin_port=htons(atoi(argv[1])); // í¬íŠ¸ëŠ” ì‚¬ìš©ìê°€ ì§€ì •í•œ í¬íŠ¸ ì‚¬ìš© 
  	 
- 	//¼­¹ö ¼ÒÄÏ¿¡ ÁÖ¼Ò¸¦ ÇÒ´çÇÑ´Ù. 
+ 	//ì„œë²„ ì†Œì¼“ì— ì£¼ì†Œë¥¼ í• ë‹¹í•œë‹¤. 
  	if(bind(serv_sock, (struct sockaddr*) &serv_adr, sizeof(serv_adr))==-1) 
  		error_handling("bind() error"); 
  
  
- 	// ¼­¹ö ¼ÒÄÏÀ» ¼­¹ö·Î »ç¿ë 
+ 	// ì„œë²„ ì†Œì¼“ì„ ì„œë²„ë¡œ ì‚¬ìš© 
  	if(listen(serv_sock, 5)==-1) 
  		error_handling("listen() error"); 
  	 
- 	while(1)	// ¹«ÇÑ·çÇÁ µ¹¸é¼­ 
+ 	while(1)	// ë¬´í•œë£¨í”„ ëŒë©´ì„œ 
  	{ 
-		clnt_adr_sz=sizeof(clnt_adr);	// Å¬¶óÀÌ¾ğÆ® ±¸Á¶Ã¼ÀÇ Å©±â¸¦ ¾ò°í 
- 		// Å¬¶óÀÌ¾ğÆ®ÀÇ Á¢¼ÓÀ» ¹Ş¾ÆµéÀÌ±â À§ÇØ Block µÈ´Ù.(¸ØÃá´Ù) 
+		clnt_adr_sz=sizeof(clnt_adr);	// í´ë¼ì´ì–¸íŠ¸ êµ¬ì¡°ì²´ì˜ í¬ê¸°ë¥¼ ì–»ê³  
+ 		// í´ë¼ì´ì–¸íŠ¸ì˜ ì ‘ì†ì„ ë°›ì•„ë“¤ì´ê¸° ìœ„í•´ Block ëœë‹¤.(ë©ˆì¶˜ë‹¤) 
  		clnt_sock=accept(serv_sock, (struct sockaddr*)&clnt_adr, &clnt_adr_sz); 
  		pthread_mutex_lock(&mutx);		 
 		clnt_socks[clnt_cnt++]=clnt_sock; 
 		pthread_mutex_unlock(&mutx); 
  
  
-		// Å¬¶óÀÌ¾ğÆ® ±¸Á¶Ã¼ÀÇ ÁÖ¼Ò¸¦ ¾²·¹µå¿¡ ³Ñ±ä´Ù.(Æ÷Æ® Æ÷ÇÔµÊ) 
- 		pthread_create(&t_id, NULL, handle_clnt, (void*)&clnt_sock);	// ¾²·¹µå ½ÃÀÛ 
-		pthread_detach(t_id);	// ¾²·¹µå°¡ Á¾·áµÇ¸é ½º½º·Î ¼Ò¸êµÇ°Ô ÇÔ 
-		// Á¢¼ÓµÈ Å¬¶óÀÌ¾ğÆ® IP¸¦ È­¸é¿¡ Âï¾îÁØ´Ù. 
+		// í´ë¼ì´ì–¸íŠ¸ êµ¬ì¡°ì²´ì˜ ì£¼ì†Œë¥¼ ì“°ë ˆë“œì— ë„˜ê¸´ë‹¤.(í¬íŠ¸ í¬í•¨ë¨) 
+ 		pthread_create(&t_id, NULL, handle_clnt, (void*)&clnt_sock);	// ì“°ë ˆë“œ ì‹œì‘ 
+		pthread_detach(t_id);	// ì“°ë ˆë“œê°€ ì¢…ë£Œë˜ë©´ ìŠ¤ìŠ¤ë¡œ ì†Œë©¸ë˜ê²Œ í•¨ 
+		// ì ‘ì†ëœ í´ë¼ì´ì–¸íŠ¸ IPë¥¼ í™”ë©´ì— ì°ì–´ì¤€ë‹¤. 
 		printf("Connected client IP: %s \n", inet_ntoa(clnt_adr.sin_addr)); 
 	} 
-	close(serv_sock);	// ¾²·¹µå°¡ ³¡³ª¸é ¼ÒÄÏÀ» ´İ¾ÆÁØ´Ù. 
+	close(serv_sock);	// ì“°ë ˆë“œê°€ ëë‚˜ë©´ ì†Œì¼“ì„ ë‹«ì•„ì¤€ë‹¤. 
 	return 0; 
 }	
 
-// ¾²·¹µå¿ë ÇÔ½º
+// ì“°ë ˆë“œìš© í•¨ìŠ¤
 void * handle_clnt(void * arg)
 {
-	int clnt_sock=*((int*)arg); //¾²·¹µå°¡ Åë½ÅÇÒ Å¬¶óÀÌ¾ğÆ® ¼ÒÄÏ º¯¼ö
+	int clnt_sock=*((int*)arg); //ì“°ë ˆë“œê°€ í†µì‹ í•  í´ë¼ì´ì–¸íŠ¸ ì†Œì¼“ ë³€ìˆ˜
 	int str_len=0, i;
 	int fSize = 0;
 	const char sig_file[BUF_SIZE] = {"file : cl->sr"}; 
 	const char Fmsg_end[BUF_SIZE] = {"FileEnd_cl->sr"}; 
 	const char sig_msg[BUF_SIZE] = {"Msg : cl->sr"}; 
-	char msg[BUF_SIZE] = {NULL}; //¸Ş¼¼Áö ¹öÆÛ
+	char msg[BUF_SIZE] = {NULL}; //ë©”ì„¸ì§€ ë²„í¼
 	char file_msg[BUF_SIZE] = {NULL};
-	//Å¬¶óÀÌ¾ğÆ®°¡ Åë½ÅÀ» ²÷Áö ¾Ê´Â ÇÑ °è¼Ó ¼­ºñ½º¸¦ Á¦°øÇÑ´Ù
+	//í´ë¼ì´ì–¸íŠ¸ê°€ í†µì‹ ì„ ëŠì§€ ì•ŠëŠ” í•œ ê³„ì† ì„œë¹„ìŠ¤ë¥¼ ì œê³µí•œë‹¤
 	while((str_len=read(clnt_sock, msg, BUF_SIZE))!=0) 
 	{
 
@@ -107,11 +107,11 @@ void * handle_clnt(void * arg)
 				
 				if(!strcmp(tmpName, clnt_names[j]) ) {
 					noCli = 0;
-					fileGo = j; // º¸³¾ ¼ÒÄÏ ¹øÈ£¸¦ ÀúÀå
+					fileGo = j; // ë³´ë‚¼ ì†Œì¼“ ë²ˆí˜¸ë¥¼ ì €ì¥
 					break;
 				}
 				else if(j == clnt_cnt - 1) {
-					noCli = 1; // ±×·± »ç¿ëÀÚ°¡ ¾øÀ» ¶§ Ç¥½Ã
+					noCli = 1; // ê·¸ëŸ° ì‚¬ìš©ìê°€ ì—†ì„ ë•Œ í‘œì‹œ
 					break;
 				}
 			}
@@ -127,17 +127,17 @@ void * handle_clnt(void * arg)
 				write(clnt_sock, "[continue_ok_nowgo]", BUF_SIZE);
 				
 			}
-			// ÇØ´ç »ç¿ëÀÚ°¡ Á¸ÀçÇÏ´ÂÁö Ã£±â
+			// í•´ë‹¹ ì‚¬ìš©ìê°€ ì¡´ì¬í•˜ëŠ”ì§€ ì°¾ê¸°
 
 
 
 			write(clnt_socks[fileGo], "file : sr->cl", BUF_SIZE);
-			// µ¥ÀÌÅÍ¸¦ º¸³½´Ù´Â ½ÅÈ£¸¦ ¸ÕÀú º¸³¿
+			// ë°ì´í„°ë¥¼ ë³´ë‚¸ë‹¤ëŠ” ì‹ í˜¸ë¥¼ ë¨¼ì € ë³´ëƒ„
 
 			read(clnt_sock, &fSize, sizeof(int));
 			printf("File size %d Byte\n", fSize);
 			write(clnt_socks[fileGo], &fSize, sizeof(int));
-			// ÆÄÀÏ Å©±â Á¤º¸¸¦ º¸³¿.(ÁøÇàÁß)
+			// íŒŒì¼ í¬ê¸° ì •ë³´ë¥¼ ë³´ëƒ„.(ì§„í–‰ì¤‘)
 
 			while(1) {
 				read(clnt_sock, file_msg, BUF_SIZE);
@@ -152,7 +152,7 @@ void * handle_clnt(void * arg)
 			pthread_mutex_unlock(&mutx);
 			printf("(!Notice)File data transfered \n");
 
-		} // ÆÄÀÏÁ¤¼Û
+		} // íŒŒì¼ì •ì†¡
 		
 		else if(!strcmp(msg, sig_msg)) {
 			int j=0;
@@ -167,11 +167,11 @@ void * handle_clnt(void * arg)
 			for(j=0; j<clnt_cnt; j++) {
 				if(!strcmp(tmpName, clnt_names[j]) ) {
 					noCli = 0;
-					mGo = j; // º¸³¾ ¼ÒÄÏ ¹øÈ£¸¦ ÀúÀå
+					mGo = j; // ë³´ë‚¼ ì†Œì¼“ ë²ˆí˜¸ë¥¼ ì €ì¥
 					break;
 				}
 				else if(j == clnt_cnt - 1) {
-					noCli = 1; // ±×·± »ç¿ëÀÚ°¡ ¾øÀ» ¶§ Ç¥½Ã
+					noCli = 1; // ê·¸ëŸ° ì‚¬ìš©ìê°€ ì—†ì„ ë•Œ í‘œì‹œ
 					break;
 				}
 			}
@@ -185,11 +185,11 @@ void * handle_clnt(void * arg)
 		{
 			printf("(!Notice)Chatting message transfered \n");
 			send_msg(msg, str_len);
-		}// ¸Ş½ÃÁö Àü¼Û
+		}// ë©”ì‹œì§€ ì „ì†¡
 	}
 
 	
-	pthread_mutex_lock(&mutx); // ÀÓ°è ¿µ¿ª ½ÃÀÛ
+	pthread_mutex_lock(&mutx); // ì„ê³„ ì˜ì—­ ì‹œì‘
 	for(i=0; i<clnt_cnt; i++)   // remove disconnected client
 	{
 		if(clnt_sock==clnt_socks[i])
@@ -202,9 +202,9 @@ void * handle_clnt(void * arg)
 		}
 	}
 	clnt_cnt--; 
- 	pthread_mutex_unlock(&mutx); // ÀÓ°è ¿µ¿ª ³¡ 
- 	close(clnt_sock);	// ¼ÒÄÏÀ» ´İ°í 
- 	return NULL;		// ¼­ºñ½º Á¾·á 
+ 	pthread_mutex_unlock(&mutx); // ì„ê³„ ì˜ì—­ ë 
+ 	close(clnt_sock);	// ì†Œì¼“ì„ ë‹«ê³  
+ 	return NULL;		// ì„œë¹„ìŠ¤ ì¢…ë£Œ 
 }
 void send_msg(char * msg, int len)   // send to all
 {
@@ -214,7 +214,7 @@ void send_msg(char * msg, int len)   // send to all
 		write(clnt_socks[i], msg, BUF_SIZE);
 	pthread_mutex_unlock(&mutx);
 }
-//¿¹¿Ü Ã³¸® ÇÔ¼ö
+//ì˜ˆì™¸ ì²˜ë¦¬ í•¨ìˆ˜
 void error_handling(char * msg)
 {
 	fputs(msg, stderr);
